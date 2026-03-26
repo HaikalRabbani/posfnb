@@ -2,7 +2,7 @@
   <AdminLayout>
     
     <div class="mb-6">
-      <h2 class="text-2xl font-bold">Dashboard Overview</h2>
+      <h2 class="text-2xl font-bold">Dashboard <span class="text-blue">Overview</span></h2>
       <p class="text-muted text-sm">Ringkasan performa hari ini</p>
     </div>
 

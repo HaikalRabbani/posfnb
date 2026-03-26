@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'icon', 'is_active', 'sort_order'];
+    // 1. MATIKAN TIMESTAMPS (Kunci utama agar error 'updated_at' hilang)
+    public $timestamps = false;
 
-    public function products()
-    {
-        return $this->hasMany(Product::class);
-    }
+    // 2. DAFTARKAN KOLOM YANG BOLEH DIISI
+    // Sesuaikan dengan yang diminta Controller (name dan description)
+    protected $fillable = [
+        'name', 
+        'description'
+    ];
 }
