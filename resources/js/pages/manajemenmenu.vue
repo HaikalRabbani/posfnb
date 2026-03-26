@@ -1,9 +1,8 @@
 <template>
   <AdminLayout>
-    
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <div>
-        <h2 class="text-2xl font-black text-ink tracking-tight">Manajemen <span class="text-blue">Menu</span></h2>
+        <h2 class="text-2xl font-black text-ink uppercase tracking-tight">Manajemen <span class="text-blue">Menu</span></h2>
         <p class="text-muted text-sm font-medium">Cari, filter, dan kelola produk menu Anda.</p>
       </div>
       
@@ -49,7 +48,7 @@
           <thead>
             <tr class="border-b border-border bg-surface/50 text-[11px] uppercase text-muted tracking-widest font-black">
               <th class="py-4 px-6">Produk & Foto</th>
-              <th class="py-4 px-6 text-right">Harga</th>
+              <th class="py-4 px-6 text-right">Harga Jual</th>
               <th class="py-4 px-6 text-center">Stok</th>
               <th class="py-4 px-6 text-center">Status</th>
               <th class="py-4 px-6 text-right">Aksi</th>
@@ -57,7 +56,7 @@
           </thead>
           <tbody class="text-sm">
             <tr v-if="isLoadingData">
-              <td colspan="5" class="py-12 text-center text-muted font-normal italic">Menyiapkan menu...</td>
+              <td colspan="5" class="py-12 text-center text-muted font-normal italic">Sinkronisasi data menu...</td>
             </tr>
             <tr v-else-if="paginatedProducts.length === 0">
               <td colspan="5" class="py-12 text-center text-muted font-normal italic">Menu tidak ditemukan.</td>
@@ -69,7 +68,7 @@
               
               <td class="py-4 px-6 flex items-center gap-4">
                 <div class="w-12 h-12 rounded-xl bg-ice border border-border flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
-                   <img v-if="product.image || product.image_url" :src="product.image_url || product.image" class="w-full h-full object-cover" />
+                   <img v-if="product.image || product.image_url" :src="product.image_url || ('https://api.etres.my.id/storage/' + product.image)" class="w-full h-full object-cover" />
                    <svg v-else class="w-5 h-5 text-hint opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <div>
@@ -121,7 +120,7 @@
         <div class="p-6 overflow-y-auto flex-1 bg-white space-y-5">
           <div class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl p-3 transition-all hover:bg-ice cursor-pointer relative" @click="$refs.fileInput.click()">
             <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFileChange">
-            <div v-if="imagePreview" class="w-full h-44 rounded-xl overflow-hidden shadow-inner">
+            <div v-if="imagePreview" class="w-full h-44 rounded-xl overflow-hidden shadow-inner relative">
                <img :src="imagePreview" class="w-full h-full object-cover" />
             </div>
             <div v-else class="text-center py-6">
@@ -140,28 +139,33 @@
             <div>
               <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Kategori</label>
               <select v-model="productForm.category_id" class="w-full border border-border rounded-xl px-4 py-3 outline-none bg-white">
-                <option value="" disabled>Pilih</option>
+                <option value="" disabled>Pilih Kategori</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Harga (Rp)</label>
-              <input v-model="productForm.price" type="number" class="w-full border border-border rounded-xl px-4 py-3 outline-none font-mono">
+              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Stok Awal</label>
+              <input v-model="productForm.stock" type="number" class="w-full border border-border rounded-xl px-4 py-3 outline-none font-mono">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
              <div>
-              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Stok</label>
-              <input v-model="productForm.stock" type="number" class="w-full border border-border rounded-xl px-4 py-3 outline-none font-mono">
+              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Harga Beli (Modal)</label>
+              <input v-model="productForm.cost_price" type="number" class="w-full border border-border rounded-xl px-4 py-3 outline-none font-mono" placeholder="Wajib">
             </div>
             <div>
-              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Status</label>
-              <select v-model="productForm.status" class="w-full border border-border rounded-xl px-4 py-3 outline-none bg-white">
-                <option :value="true">Tersedia</option>
-                <option :value="false">Habis</option>
-              </select>
+              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Harga Jual</label>
+              <input v-model="productForm.price" type="number" class="w-full border border-border rounded-xl px-4 py-3 outline-none font-mono">
             </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Status Publikasi</label>
+            <select v-model="productForm.status" class="w-full border border-border rounded-xl px-4 py-3 outline-none bg-white">
+              <option :value="true">Tersedia (Aktif)</option>
+              <option :value="false">Habis (Disembunyikan)</option>
+            </select>
           </div>
         </div>
 
@@ -174,6 +178,47 @@
       </div>
     </div>
 
+    <div v-if="isCategoryModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-ink/60 backdrop-blur-sm" @click="closeCategoryModal"></div>
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md z-10 overflow-hidden flex flex-col max-h-[90vh] font-bold">
+        <div class="p-6 border-b border-border flex justify-between items-center bg-white">
+          <h3 class="text-xl font-black text-ink uppercase tracking-tight">Kelola Kategori</h3>
+          <button @click="closeCategoryModal" class="text-muted hover:text-cancelled"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        
+        <div class="p-6 flex-1 overflow-y-auto bg-white custom-scrollbar">
+          <form @submit.prevent="saveCategory" class="flex flex-col gap-3 mb-6 border-b border-border pb-6">
+            <div>
+              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Nama Kategori</label>
+              <input v-model="categoryForm.name" type="text" required class="w-full border border-border rounded-xl px-4 py-2.5 outline-none focus:border-blue transition-all text-sm" placeholder="Contoh: Minuman Dingin">
+            </div>
+            <div>
+              <label class="block text-[10px] font-black uppercase text-muted tracking-widest mb-1.5">Deskripsi</label>
+              <input v-model="categoryForm.description" type="text" class="w-full border border-border rounded-xl px-4 py-2.5 outline-none focus:border-blue transition-all text-sm font-normal" placeholder="Keterangan singkat (opsional)">
+            </div>
+            <div class="flex gap-2 mt-2">
+                <button type="submit" :disabled="isSaving" class="flex-1 bg-blue hover:bg-navy transition-colors text-white py-2.5 rounded-xl text-xs uppercase tracking-widest font-black shadow-md">
+                  {{ categoryForm.id ? 'Perbarui Kategori' : 'Tambah Kategori' }}
+                </button>
+                <button v-if="categoryForm.id" @click="resetCategoryForm" type="button" class="px-4 py-2.5 bg-surface border border-border rounded-xl text-xs uppercase tracking-widest font-black hover:bg-ice transition-colors">Batal</button>
+            </div>
+          </form>
+
+          <p class="text-[10px] font-black uppercase text-muted tracking-widest mb-3">Daftar Kategori Tersedia</p>
+          <ul class="flex flex-col gap-2">
+            <li v-if="categories.length === 0" class="text-center text-xs text-muted py-4 italic font-normal">Belum ada kategori.</li>
+            <li v-for="cat in categories" :key="cat.id" class="flex items-center justify-between p-3 border border-ice rounded-xl hover:bg-surface transition-colors">
+              <span class="font-bold text-ink text-sm">{{ cat.name }}</span>
+              <div class="flex gap-1 font-normal">
+                <button @click="editCategory(cat)" class="p-1.5 text-muted hover:text-blue transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                <button @click="deleteCategory(cat.id)" class="p-1.5 text-muted hover:text-cancelled transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
   </AdminLayout>
 </template>
 
@@ -182,29 +227,38 @@ import { ref, computed, onMounted, watch } from 'vue';
 import AdminLayout from '../Components/AdminLayout.vue';
 import axios from 'axios';
 
+// API Setup
 const api = axios.create({
   baseURL: 'https://api.etres.my.id/api',
   headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
 });
 
+// States
 const products = ref([]);
 const categories = ref([]);
 const isLoadingData = ref(false);
 const isSaving = ref(false);
 const errors = ref({});
 
-// FILTER & PAGINATION STATES
+// State Pencarian & Pagination
 const searchQuery = ref('');
 const selectedFilterCategory = ref('');
 const perPage = ref(10);
 const currentPage = ref(1);
 
+// State Modal Produk
 const isProductModalOpen = ref(false);
 const isEditMode = ref(false);
 const imagePreview = ref(null);
-const productForm = ref({ id: null, name: '', category_id: '', price: '', stock: '', status: true, image: null });
+const productForm = ref({ id: null, name: '', category_id: '', price: '', cost_price: '', stock: 0, status: true, image: null });
 
-// 1. FILTER & SORT LOGIC
+// State Modal Kategori
+const isCategoryModalOpen = ref(false);
+const categoryForm = ref({ id: null, name: '', description: '' });
+
+// ---------------------------------------------
+// LOGIKA FILTER, SORTING & PAGINATION
+// ---------------------------------------------
 const filteredAndSortedProducts = computed(() => {
   let res = products.value.filter(p => {
     const matchName = (p.name || '').toLowerCase().includes(searchQuery.value.toLowerCase());
@@ -212,7 +266,7 @@ const filteredAndSortedProducts = computed(() => {
     return matchName && matchCat;
   });
   
-  // Sorting: Yang tersedia (status=1 & stok>0) di atas
+  // Sorting: Yang tersedia di atas
   return res.sort((a, b) => {
     const aAvail = (a.status && a.stock > 0) ? 1 : 0;
     const bAvail = (b.status && b.stock > 0) ? 1 : 0;
@@ -220,16 +274,18 @@ const filteredAndSortedProducts = computed(() => {
   });
 });
 
-// 2. PAGINATION LOGIC
 const totalPages = computed(() => Math.ceil(filteredAndSortedProducts.value.length / perPage.value) || 1);
 const paginatedProducts = computed(() => {
   const start = (currentPage.value - 1) * perPage.value;
   return filteredAndSortedProducts.value.slice(start, start + perPage.value);
 });
 
+// Reset ke page 1 kalau lagi ngetik atau ganti filter
 watch([searchQuery, selectedFilterCategory, perPage], () => currentPage.value = 1);
 
-// ACTIONS
+// ---------------------------------------------
+// FUNGSI UMUM
+// ---------------------------------------------
 const fetchData = async () => {
   isLoadingData.value = true;
   try {
@@ -240,9 +296,15 @@ const fetchData = async () => {
   finally { isLoadingData.value = false; }
 };
 
+const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
+
+// ---------------------------------------------
+// FUNGSI CRUD PRODUK
+// ---------------------------------------------
 const handleFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
+    if (file.size > 2 * 1024 * 1024) return alert("Maksimal ukuran foto adalah 2MB!");
     productForm.value.image = file;
     const reader = new FileReader();
     reader.onload = (res) => { imagePreview.value = res.target.result; };
@@ -254,45 +316,60 @@ const openProductModal = (p = null) => {
   errors.value = {};
   if (p) {
     isEditMode.value = true;
-    productForm.value = { ...p, image: null };
-    imagePreview.value = p.image_url || p.image;
+    productForm.value = { ...p, image: null, cost_price: p.cost_price || '' };
+    // PERBAIKAN URL GAMBAR DI PREVIEW MODAL
+    imagePreview.value = p.image_url || (p.image ? `https://api.etres.my.id/storage/${p.image}` : null);
   } else {
     isEditMode.value = false;
-    productForm.value = { id: null, name: '', category_id: '', price: '', stock: 0, status: true, image: null };
+    productForm.value = { id: null, name: '', category_id: '', price: '', cost_price: '', stock: 0, status: true, image: null };
     imagePreview.value = null;
   }
   isProductModalOpen.value = true;
 };
 
-const closeProductModal = () => { isProductModalOpen.value = false; errors.value = {}; };
+const closeProductModal = () => isProductModalOpen.value = false;
 
 const saveProduct = async () => {
   errors.value = {};
-  if (!productForm.value.name) { errors.value.name = "Nama menu harus diisi"; return; }
+  if (!productForm.value.name) { errors.value.name = "Nama menu wajib diisi"; return; }
 
   isSaving.value = true;
   const formData = new FormData();
   formData.append('name', productForm.value.name);
   formData.append('category_id', productForm.value.category_id);
   formData.append('price', productForm.value.price);
+  formData.append('cost_price', productForm.value.cost_price || 0); // Wajib dari Backend
   formData.append('stock', productForm.value.stock);
   formData.append('status', productForm.value.status ? 1 : 0);
-  if (productForm.value.image) formData.append('image', productForm.value.image);
+  
+  if (productForm.value.image) {
+    formData.append('image', productForm.value.image);
+  }
 
   try {
     if (isEditMode.value) {
-      formData.append('_method', 'PUT');
-      await api.post(`/products/${productForm.value.id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      formData.append('_method', 'PUT'); // Trick Spoofing Laravel
+      await api.post(`/products/${productForm.value.id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     } else {
-      await api.post('/products', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post('/products', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     }
-    closeProductModal(); fetchData();
-  } catch (e) { alert("Terjadi kesalahan. Pastikan file gambar tidak terlalu besar."); }
-  finally { isSaving.value = false; }
+    closeProductModal(); 
+    fetchData();
+  } catch (e) {
+    alert("Error: " + (e.response?.data?.message || "Pastikan semua data dan HPP (Harga Beli) terisi."));
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 const deleteProduct = async (id) => {
-  if (confirm('Hapus menu ini?')) { try { await api.delete(`/products/${id}`); fetchData(); } catch (e) { alert("Gagal"); } }
+  if (confirm('Yakin ingin menghapus menu ini?')) { 
+    try { await api.delete(`/products/${id}`); fetchData(); } catch (e) { alert("Gagal menghapus"); } 
+  }
 };
 
 const toggleProductStatus = async (p) => {
@@ -303,7 +380,36 @@ const toggleProductStatus = async (p) => {
   } catch (e) { alert("Gagal update status"); }
 };
 
-const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
+// ---------------------------------------------
+// FUNGSI CRUD KATEGORI
+// ---------------------------------------------
+const openCategoryModal = () => { isCategoryModalOpen.value = true; resetCategoryForm(); };
+const closeCategoryModal = () => { isCategoryModalOpen.value = false; };
+const resetCategoryForm = () => { categoryForm.value = { id: null, name: '', description: '' }; };
+
+const editCategory = (c) => { 
+  categoryForm.value = { id: c.id, name: c.name, description: c.description || '' }; 
+};
+
+const saveCategory = async () => {
+  if (!categoryForm.value.name) return;
+  isSaving.value = true;
+  try {
+    const payload = { name: categoryForm.value.name, description: categoryForm.value.description };
+    if (categoryForm.value.id) await api.put(`/categories/${categoryForm.value.id}`, payload);
+    else await api.post('/categories', payload);
+    
+    resetCategoryForm(); 
+    fetchData();
+  } catch (e) { alert("Gagal menyimpan kategori"); }
+  finally { isSaving.value = false; }
+};
+
+const deleteCategory = async (id) => {
+  if (confirm('Hapus kategori ini? Menu yang terkait mungkin ikut terpengaruh.')) { 
+    try { await api.delete(`/categories/${id}`); fetchData(); } catch (e) { alert("Gagal menghapus kategori"); } 
+  }
+};
 
 onMounted(fetchData);
 </script>
