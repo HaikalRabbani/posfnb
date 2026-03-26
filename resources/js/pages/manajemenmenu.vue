@@ -67,8 +67,8 @@
                 :class="(!product.status || product.stock <= 0) ? 'bg-surface opacity-50 grayscale' : 'hover:bg-surface/50'">
               
               <td class="py-4 px-6 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-ice border border-border flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
-                   <img v-if="product.image || product.image_url" :src="product.image_url || ('https://api.etres.my.id/storage/' + product.image)" class="w-full h-full object-cover" />
+                <div class="w-12 h-12 rounded-xl bg-ice border border-border flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm bg-white">
+                   <img v-if="product.image" :src="getImageUrl(product.image)" class="w-full h-full object-cover" />
                    <svg v-else class="w-5 h-5 text-hint opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <div>
@@ -120,7 +120,7 @@
         <div class="p-6 overflow-y-auto flex-1 bg-white space-y-5">
           <div class="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl p-3 transition-all hover:bg-ice cursor-pointer relative" @click="$refs.fileInput.click()">
             <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFileChange">
-            <div v-if="imagePreview" class="w-full h-44 rounded-xl overflow-hidden shadow-inner relative">
+            <div v-if="imagePreview" class="w-full h-44 rounded-xl overflow-hidden shadow-inner relative bg-white">
                <img :src="imagePreview" class="w-full h-full object-cover" />
             </div>
             <div v-else class="text-center py-6">
@@ -246,7 +246,7 @@ const selectedFilterCategory = ref('');
 const perPage = ref(10);
 const currentPage = ref(1);
 
-// State Modal Produk
+// State Modal Produk KEMBALI MENGGUNAKAN: cost_price, stock, status, image
 const isProductModalOpen = ref(false);
 const isEditMode = ref(false);
 const imagePreview = ref(null);
@@ -255,6 +255,26 @@ const productForm = ref({ id: null, name: '', category_id: '', price: '', cost_p
 // State Modal Kategori
 const isCategoryModalOpen = ref(false);
 const categoryForm = ref({ id: null, name: '', description: '' });
+
+// ---------------------------------------------
+// HELPER: Penentu URL Gambar yang Pintar
+// ---------------------------------------------
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // Jika sudah URL lengkap (dari external source / blob)
+  if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+    return imagePath;
+  }
+  
+  // Jika path fallback dari controller (uploads/products/...)
+  if (imagePath.startsWith('uploads/')) {
+    return `https://api.etres.my.id/${imagePath}`;
+  }
+  
+  // Jika path normal (products/...)
+  return `https://api.etres.my.id/storage/${imagePath}`;
+};
 
 // ---------------------------------------------
 // LOGIKA FILTER, SORTING & PAGINATION
@@ -266,7 +286,6 @@ const filteredAndSortedProducts = computed(() => {
     return matchName && matchCat;
   });
   
-  // Sorting: Yang tersedia di atas
   return res.sort((a, b) => {
     const aAvail = (a.status && a.stock > 0) ? 1 : 0;
     const bAvail = (b.status && b.stock > 0) ? 1 : 0;
@@ -280,20 +299,25 @@ const paginatedProducts = computed(() => {
   return filteredAndSortedProducts.value.slice(start, start + perPage.value);
 });
 
-// Reset ke page 1 kalau lagi ngetik atau ganti filter
 watch([searchQuery, selectedFilterCategory, perPage], () => currentPage.value = 1);
 
 // ---------------------------------------------
-// FUNGSI UMUM
+// FUNGSI UMUM (Panggil API terpisah karena API index() nya standard)
 // ---------------------------------------------
 const fetchData = async () => {
   isLoadingData.value = true;
   try {
-    const [catRes, prodRes] = await Promise.all([api.get('/categories'), api.get('/products')]);
+    const [catRes, prodRes] = await Promise.all([
+      api.get('/categories'), 
+      api.get('/products')
+    ]);
     categories.value = catRes.data || [];
     products.value = prodRes.data || [];
-  } catch (e) { console.error(e); }
-  finally { isLoadingData.value = false; }
+  } catch (e) { 
+    console.error(e); 
+  } finally { 
+    isLoadingData.value = false; 
+  }
 };
 
 const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
@@ -304,7 +328,7 @@ const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', 
 const handleFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    if (file.size > 2 * 1024 * 1024) return alert("Maksimal ukuran foto adalah 2MB!");
+    if (file.size > 5 * 1024 * 1024) return alert("Maksimal ukuran foto adalah 5MB!"); // Sesuai max:5000 API
     productForm.value.image = file;
     const reader = new FileReader();
     reader.onload = (res) => { imagePreview.value = res.target.result; };
@@ -316,9 +340,8 @@ const openProductModal = (p = null) => {
   errors.value = {};
   if (p) {
     isEditMode.value = true;
-    productForm.value = { ...p, image: null, cost_price: p.cost_price || '' };
-    // PERBAIKAN URL GAMBAR DI PREVIEW MODAL
-    imagePreview.value = p.image_url || (p.image ? `https://api.etres.my.id/storage/${p.image}` : null);
+    productForm.value = { ...p, image: null, cost_price: p.cost_price || 0 }; 
+    imagePreview.value = getImageUrl(p.image);
   } else {
     isEditMode.value = false;
     productForm.value = { id: null, name: '', category_id: '', price: '', cost_price: '', stock: 0, status: true, image: null };
@@ -338,7 +361,7 @@ const saveProduct = async () => {
   formData.append('name', productForm.value.name);
   formData.append('category_id', productForm.value.category_id);
   formData.append('price', productForm.value.price);
-  formData.append('cost_price', productForm.value.cost_price || 0); // Wajib dari Backend
+  formData.append('cost_price', productForm.value.cost_price || 0);
   formData.append('stock', productForm.value.stock);
   formData.append('status', productForm.value.status ? 1 : 0);
   
@@ -348,7 +371,7 @@ const saveProduct = async () => {
 
   try {
     if (isEditMode.value) {
-      formData.append('_method', 'PUT'); // Trick Spoofing Laravel
+      formData.append('_method', 'PUT');
       await api.post(`/products/${productForm.value.id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -360,7 +383,7 @@ const saveProduct = async () => {
     closeProductModal(); 
     fetchData();
   } catch (e) {
-    alert("Error: " + (e.response?.data?.message || "Pastikan semua data dan HPP (Harga Beli) terisi."));
+    alert("Error: " + (e.response?.data?.message || "Gagal menyimpan. Pastikan semua data lengkap."));
   } finally {
     isSaving.value = false;
   }
@@ -406,7 +429,7 @@ const saveCategory = async () => {
 };
 
 const deleteCategory = async (id) => {
-  if (confirm('Hapus kategori ini? Menu yang terkait mungkin ikut terpengaruh.')) { 
+  if (confirm('Hapus kategori ini?')) { 
     try { await api.delete(`/categories/${id}`); fetchData(); } catch (e) { alert("Gagal menghapus kategori"); } 
   }
 };
