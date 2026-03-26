@@ -1,12 +1,39 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
 @source "../**/*.blade.php";
 @source "../**/*.js";
 @source "../**/*.vue";
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+  /* Font Family Setup */
+  --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Base Palette - Navy Blue */
+  --color-ink: #1A2332;
+  --color-navy: #1B4F8A;
+  --color-blue: #2E7DD6;
+  --color-sky: #6BAEE8;
+  --color-muted: #5A7A9A;
+  --color-hint: #8AAFCC;
+  --color-border: #D4E4F4;
+  --color-ice: #EBF3FB;
+  --color-surface: #F0F4F8;
+  --color-white: #F7FAFD;
+
+  /* Semantic Colors - Status Order */
+  --color-pending: #C4860A;
+  --color-confirmed: #4A90D9;
+  --color-preparing: #7B5EA7;
+  --color-ready: #0E8A8A;
+  --color-paid: #2A7A4B;
+  --color-cancelled: #B83B2A;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-surface); /* Background utama Dashboard Admin */
+    color: var(--color-ink); /* Teks utama menggunakan Ink */
+    font-family: var(--font-sans);
+  }
 }
