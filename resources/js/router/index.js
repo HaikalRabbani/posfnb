@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../Pages/Login.vue';
 import Dashboard from '../Pages/Dashboard.vue';
+import ManajemenMenu from '../Pages/ManajemenMenu.vue'; // <-- 1. Import ini
 
 const routes = [
     {
@@ -12,6 +13,11 @@ const routes = [
         path: '/dashboard',
         name: 'Dashboard',
         component: Dashboard
+    },
+    {
+        path: '/menu',           // <-- 2. Tambahkan block ini
+        name: 'ManajemenMenu',
+        component: ManajemenMenu
     }
 ];
 
