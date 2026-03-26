@@ -58,7 +58,7 @@
               <td class="py-4 px-6 text-right font-normal">
                 <div class="flex items-center justify-end gap-2">
                   <button @click="openModal(user)" class="p-1.5 text-muted hover:text-blue transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                  <button @click="deleteUser(user.id)" class="p-1.5 text-muted hover:text-cancelled transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                  <button @click="confirmDelete(user)" class="p-1.5 text-muted hover:text-cancelled transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                 </div>
               </td>
             </tr>
@@ -108,6 +108,32 @@
         </div>
       </div>
     </div>
+
+    <div v-if="deleteState.isOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-ink/70 backdrop-blur-sm" @click="cancelDelete"></div>
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm z-10 overflow-hidden flex flex-col font-bold text-center p-6 relative transform transition-all">
+        <div class="w-16 h-16 bg-cancelled/10 text-cancelled rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </div>
+        
+        <h3 class="text-xl font-black text-ink uppercase tracking-tight mb-2">
+          Hapus Akun Kasir?
+        </h3>
+        
+        <p class="text-sm text-muted font-medium mb-6">
+          Apakah Anda yakin ingin menghapus akun <span class="text-ink font-black">"{{ deleteState.name }}"</span>?<br>
+          <span class="text-[11px] mt-1 block">Tindakan ini tidak dapat dibatalkan.</span>
+        </p>
+        
+        <div class="flex gap-3">
+          <button @click="cancelDelete" class="flex-1 px-4 py-3 bg-surface border border-border text-ink hover:bg-ice rounded-xl transition-all">Batal</button>
+          <button @click="executeDelete" :disabled="deleteState.isDeleting" class="flex-1 px-4 py-3 bg-cancelled hover:bg-red-600 text-white rounded-xl shadow-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]">
+            {{ deleteState.isDeleting ? 'Menghapus...' : 'Ya, Hapus' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
   </AdminLayout>
 </template>
 
@@ -129,6 +155,14 @@ const isEditMode = ref(false);
 const errors = ref({});
 
 const form = ref({ id: null, name: '', email: '', role: 'kasir', password: '', is_active: true });
+
+// NEW: STATE MODAL HAPUS
+const deleteState = ref({
+  isOpen: false,
+  id: null,
+  name: '',
+  isDeleting: false
+});
 
 const fetchData = async () => {
   isLoading.value = true;
@@ -198,9 +232,30 @@ const toggleUserStatus = async (user) => {
   }
 };
 
-const deleteUser = async (id) => {
-  if (confirm('Hapus akses kasir ini?')) {
-    try { await api.delete(`/users/${id}`); fetchData(); } catch (e) { alert("Gagal hapus"); }
+// NEW: FUNGSI KONFIRMASI & EKSEKUSI HAPUS
+const confirmDelete = (user) => {
+  deleteState.value = {
+    isOpen: true,
+    id: user.id,
+    name: user.name,
+    isDeleting: false
+  };
+};
+
+const cancelDelete = () => {
+  deleteState.value.isOpen = false;
+};
+
+const executeDelete = async () => {
+  deleteState.value.isDeleting = true;
+  try {
+    await api.delete(`/users/${deleteState.value.id}`);
+    cancelDelete();
+    fetchData(); 
+  } catch (e) { 
+    alert("Gagal menghapus akun kasir. Pastikan koneksi internet stabil."); 
+  } finally {
+    deleteState.value.isDeleting = false;
   }
 };
 

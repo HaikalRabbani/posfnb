@@ -2,7 +2,7 @@
   <AdminLayout>
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <div>
-        <h2 class="text-2xl font-black text-ink uppercase tracking-tight">Manajemen <span class="text-blue">Menu</span></h2>
+        <h2 class="text-2xl font-black text-ink tracking-tight">Manajemen <span class="text-blue">Menu</span></h2>
         <p class="text-muted text-sm font-medium">Cari, filter, dan kelola produk menu Anda.</p>
       </div>
       
@@ -91,7 +91,7 @@
               <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-2 font-normal">
                   <button @click="openProductModal(product)" class="p-1.5 text-muted hover:text-blue transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                  <button @click="deleteProduct(product.id)" class="p-1.5 text-muted hover:text-cancelled transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                  <button @click="confirmDelete('product', product)" class="p-1.5 text-muted hover:text-cancelled transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                 </div>
               </td>
             </tr>
@@ -211,10 +211,36 @@
               <span class="font-bold text-ink text-sm">{{ cat.name }}</span>
               <div class="flex gap-1 font-normal">
                 <button @click="editCategory(cat)" class="p-1.5 text-muted hover:text-blue transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                <button @click="deleteCategory(cat.id)" class="p-1.5 text-muted hover:text-cancelled transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                <button @click="confirmDelete('category', cat)" class="p-1.5 text-muted hover:text-cancelled transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
               </div>
             </li>
           </ul>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="deleteState.isOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-ink/70 backdrop-blur-sm" @click="cancelDelete"></div>
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm z-10 overflow-hidden flex flex-col font-bold text-center p-6 relative transform transition-all">
+        <div class="w-16 h-16 bg-cancelled/10 text-cancelled rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </div>
+        
+        <h3 class="text-xl font-black text-ink uppercase tracking-tight mb-2">
+          Hapus {{ deleteState.type === 'product' ? 'Menu' : 'Kategori' }}?
+        </h3>
+        
+        <p class="text-sm text-muted font-medium mb-6">
+          Apakah Anda yakin ingin menghapus <span class="text-ink font-black">"{{ deleteState.name }}"</span>?<br>
+          <span v-if="deleteState.type === 'category'" class="text-[11px] text-cancelled/80 mt-1 block leading-tight">Perhatian: Menu yang menggunakan kategori ini mungkin akan terpengaruh.</span>
+          <span v-else class="text-[11px] mt-1 block">Tindakan ini tidak dapat dibatalkan.</span>
+        </p>
+        
+        <div class="flex gap-3">
+          <button @click="cancelDelete" class="flex-1 px-4 py-3 bg-surface border border-border text-ink hover:bg-ice rounded-xl transition-all">Batal</button>
+          <button @click="executeDelete" :disabled="deleteState.isDeleting" class="flex-1 px-4 py-3 bg-cancelled hover:bg-red-600 text-white rounded-xl shadow-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]">
+            {{ deleteState.isDeleting ? 'Menghapus...' : 'Ya, Hapus' }}
+          </button>
         </div>
       </div>
     </div>
@@ -246,7 +272,7 @@ const selectedFilterCategory = ref('');
 const perPage = ref(10);
 const currentPage = ref(1);
 
-// State Modal Produk KEMBALI MENGGUNAKAN: cost_price, stock, status, image
+// State Modal Produk 
 const isProductModalOpen = ref(false);
 const isEditMode = ref(false);
 const imagePreview = ref(null);
@@ -257,28 +283,57 @@ const isCategoryModalOpen = ref(false);
 const categoryForm = ref({ id: null, name: '', description: '' });
 
 // ---------------------------------------------
-// HELPER: Penentu URL Gambar yang Pintar
+// NEW: STATE MODAL HAPUS UNIVERSAL
 // ---------------------------------------------
+const deleteState = ref({
+  isOpen: false,
+  type: '', // 'product' atau 'category'
+  id: null,
+  name: '',
+  isDeleting: false
+});
+
+const confirmDelete = (type, item) => {
+  deleteState.value = {
+    isOpen: true,
+    type: type,
+    id: item.id,
+    name: item.name,
+    isDeleting: false
+  };
+};
+
+const cancelDelete = () => {
+  deleteState.value.isOpen = false;
+};
+
+const executeDelete = async () => {
+  deleteState.value.isDeleting = true;
+  try {
+    if (deleteState.value.type === 'product') {
+      await api.delete(`/products/${deleteState.value.id}`);
+    } else if (deleteState.value.type === 'category') {
+      await api.delete(`/categories/${deleteState.value.id}`);
+    }
+    cancelDelete();
+    fetchData(); // Refresh tabel setelah hapus
+  } catch (e) {
+    alert(`Gagal menghapus ${deleteState.value.type === 'product' ? 'menu' : 'kategori'}.`);
+  } finally {
+    deleteState.value.isDeleting = false;
+  }
+};
+// ---------------------------------------------
+
+// HELPER: Penentu URL Gambar yang Pintar
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
-  
-  // Jika sudah URL lengkap (dari external source / blob)
-  if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
-    return imagePath;
-  }
-  
-  // Jika path fallback dari controller (uploads/products/...)
-  if (imagePath.startsWith('uploads/')) {
-    return `https://api.etres.my.id/${imagePath}`;
-  }
-  
-  // Jika path normal (products/...)
+  if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
+  if (imagePath.startsWith('uploads/')) return `https://api.etres.my.id/${imagePath}`;
   return `https://api.etres.my.id/storage/${imagePath}`;
 };
 
-// ---------------------------------------------
 // LOGIKA FILTER, SORTING & PAGINATION
-// ---------------------------------------------
 const filteredAndSortedProducts = computed(() => {
   let res = products.value.filter(p => {
     const matchName = (p.name || '').toLowerCase().includes(searchQuery.value.toLowerCase());
@@ -301,16 +356,11 @@ const paginatedProducts = computed(() => {
 
 watch([searchQuery, selectedFilterCategory, perPage], () => currentPage.value = 1);
 
-// ---------------------------------------------
-// FUNGSI UMUM (Panggil API terpisah karena API index() nya standard)
-// ---------------------------------------------
+// FUNGSI UMUM 
 const fetchData = async () => {
   isLoadingData.value = true;
   try {
-    const [catRes, prodRes] = await Promise.all([
-      api.get('/categories'), 
-      api.get('/products')
-    ]);
+    const [catRes, prodRes] = await Promise.all([api.get('/categories'), api.get('/products')]);
     categories.value = catRes.data || [];
     products.value = prodRes.data || [];
   } catch (e) { 
@@ -322,13 +372,11 @@ const fetchData = async () => {
 
 const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
 
-// ---------------------------------------------
 // FUNGSI CRUD PRODUK
-// ---------------------------------------------
 const handleFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    if (file.size > 5 * 1024 * 1024) return alert("Maksimal ukuran foto adalah 5MB!"); // Sesuai max:5000 API
+    if (file.size > 5 * 1024 * 1024) return alert("Maksimal ukuran foto adalah 5MB!"); 
     productForm.value.image = file;
     const reader = new FileReader();
     reader.onload = (res) => { imagePreview.value = res.target.result; };
@@ -389,12 +437,6 @@ const saveProduct = async () => {
   }
 };
 
-const deleteProduct = async (id) => {
-  if (confirm('Yakin ingin menghapus menu ini?')) { 
-    try { await api.delete(`/products/${id}`); fetchData(); } catch (e) { alert("Gagal menghapus"); } 
-  }
-};
-
 const toggleProductStatus = async (p) => {
   const newStatus = !p.status;
   try {
@@ -403,9 +445,7 @@ const toggleProductStatus = async (p) => {
   } catch (e) { alert("Gagal update status"); }
 };
 
-// ---------------------------------------------
 // FUNGSI CRUD KATEGORI
-// ---------------------------------------------
 const openCategoryModal = () => { isCategoryModalOpen.value = true; resetCategoryForm(); };
 const closeCategoryModal = () => { isCategoryModalOpen.value = false; };
 const resetCategoryForm = () => { categoryForm.value = { id: null, name: '', description: '' }; };
@@ -426,12 +466,6 @@ const saveCategory = async () => {
     fetchData();
   } catch (e) { alert("Gagal menyimpan kategori"); }
   finally { isSaving.value = false; }
-};
-
-const deleteCategory = async (id) => {
-  if (confirm('Hapus kategori ini?')) { 
-    try { await api.delete(`/categories/${id}`); fetchData(); } catch (e) { alert("Gagal menghapus kategori"); } 
-  }
 };
 
 onMounted(fetchData);
