@@ -67,17 +67,34 @@
             <span class="text-[13px] font-medium">{{ currentDate }}</span>
           </div>
           <button class="relative p-2 text-muted hover:text-navy hover:bg-ice rounded-full transition-colors" title="Notifikasi"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg><span class="absolute top-1.5 right-2 w-2.5 h-2.5 bg-cancelled rounded-full border-2 border-surface"></span></button>
+          
           <div class="h-8 w-px bg-border"></div>
-          <button class="flex items-center gap-3 hover:bg-ice p-1.5 pr-3 rounded-xl transition-colors text-left group">
-            <div class="w-9 h-9 rounded-full bg-navy text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-blue transition-colors uppercase">
-              {{ userProfile.initial }}
+          
+          <div class="relative">
+            <button @click="toggleProfileMenu" class="flex items-center gap-3 hover:bg-ice p-1.5 pr-3 rounded-xl transition-colors text-left group">
+              <div class="w-9 h-9 rounded-full bg-navy text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-blue transition-colors uppercase">
+                {{ userProfile.initial }}
+              </div>
+              <div class="hidden md:block">
+                <span class="block text-sm font-bold text-ink leading-tight">{{ userProfile.name }}</span>
+                <span class="block text-[11px] text-blue font-medium leading-tight mt-0.5 capitalize">{{ userProfile.role }}</span>
+              </div>
+              <svg class="w-4 h-4 text-muted group-hover:text-navy transition-transform" :class="isProfileMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+
+            <div v-if="isProfileMenuOpen" @click="isProfileMenuOpen = false" class="fixed inset-0 z-40"></div>
+
+            <div v-if="isProfileMenuOpen" class="absolute right-0 mt-2 w-48 bg-white border border-border rounded-xl shadow-lg py-2 z-50">
+              <router-link to="/profile-setting" @click="isProfileMenuOpen = false" class="block px-4 py-2 text-sm font-bold text-ink hover:bg-ice transition-colors">
+                Pengaturan Profil
+              </router-link>
+              <div class="border-t border-border my-1"></div>
+              <p class="w-full text-left block px-4 py-2 text-sm font-bold transition-colors">
+                fitur lain
+              </p>
             </div>
-            <div class="hidden md:block">
-              <span class="block text-sm font-bold text-ink leading-tight">{{ userProfile.name }}</span>
-              <span class="block text-[11px] text-blue font-medium leading-tight mt-0.5 capitalize">{{ userProfile.role }}</span>
-            </div>
-            <svg class="w-4 h-4 text-muted group-hover:text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-          </button>
+          </div>
+
         </div>
       </header>
 
@@ -96,6 +113,7 @@ import axios from 'axios';
 
 const router = useRouter();
 const isSidebarMinimized = ref(false);
+const isProfileMenuOpen = ref(false); // State untuk dropdown profil
 const currentDate = ref('');
 
 // State untuk menyimpan data User yang login
@@ -117,6 +135,7 @@ onMounted(() => {
 });
 
 const toggleSidebar = () => isSidebarMinimized.value = !isSidebarMinimized.value;
+const toggleProfileMenu = () => isProfileMenuOpen.value = !isProfileMenuOpen.value;
 
 // Fungsi GET /auth/me
 const fetchUserProfile = async () => {

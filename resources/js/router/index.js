@@ -5,6 +5,7 @@ import ManajemenMenu from '../Pages/ManajemenMenu.vue';
 import RiwayatTransaksi from '../Pages/RiwayatTransaksi.vue';
 import LaporanAnalitik from '../Pages/LaporanAnalitik.vue';
 import ManajemenKasir from '../Pages/ManajemenKasir.vue';
+import ProfileSetting from '../pages/ProfileSetting.vue';
 
 const routes = [
     {
@@ -37,7 +38,13 @@ const routes = [
         path: '/kasir', // Ganti dari /users jadi /kasir
         name: 'ManajemenKasir',
         component: ManajemenKasir
-    }
+    },
+    {
+    path: '/profile-setting',
+    name: 'ProfileSetting',
+    component: ProfileSetting,
+    // (Opsional) tambahkan meta requiresAuth jika kamu pakai navigation guard
+    },
 ];
 
 const router = createRouter({
