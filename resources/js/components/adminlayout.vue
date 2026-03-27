@@ -194,6 +194,16 @@ const handleLogout = async () => {
   localStorage.removeItem('auth_token');
   router.push('/');
 };
+
+
+// Ambil data user dari local storage
+const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+
+// Bikin variabel untuk ngecek apakah dia bos (Manager / Developer)
+const isManagerOrDev = computed(() => {
+  return currentUser.role === 'manager' || currentUser.role === 'developer' || currentUser.role === 'owner';
+});
+
 </script>
 
 <style>
